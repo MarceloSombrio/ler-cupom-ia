@@ -17,7 +17,7 @@ except Exception:
 
 from pdf2image import convert_from_bytes
 
-# Configure tesseract path for Windows
+# Configure tesseract path for Windows (only for local development)
 TESSERACT_CMD = os.getenv("TESSERACT_CMD")
 if not TESSERACT_CMD:
     # Try common Windows installation paths
@@ -35,10 +35,11 @@ if TESSERACT_CMD:
     pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
     print(f"Tesseract configurado: {TESSERACT_CMD}")
 else:
-    print("AVISO: Tesseract não encontrado. Instale em: https://github.com/UB-Mannheim/tesseract/wiki")
+    print("AVISO: Tesseract não encontrado. Usando apenas IA para análise.")
 
 # Configure OpenAI
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-myTqtiPzxyxkmRmU0C6o-lW5ekaHrnChi2lvDBPKk6T3BlbkFJTeEtH5pt0ymMcpXlNQfjXkF6-Z-_l-omSWbQmjwPoA")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "
+")
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 app = Flask(__name__)
@@ -153,7 +154,12 @@ def _ocr_image(pil_image: Image.Image) -> str:
             text = pytesseract.image_to_string(pil_image, lang='eng', config=config)
         except Exception:
             # Last resort: no language specified
-            text = pytesseract.image_to_string(pil_image, config=config)
+            try:
+                text = pytesseract.image_to_string(pil_image, config=config)
+            except Exception:
+                # If Tesseract is not available, return empty string
+                print("Tesseract não disponível. Usando apenas IA.")
+                return ""
     return text
 
 
