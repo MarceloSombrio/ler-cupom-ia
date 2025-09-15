@@ -207,6 +207,8 @@ def _extract_delivery_fee(full_text: str) -> Optional[str]:
 # ------------------------
 
 def _ai_analyze_image(image_bytes: bytes) -> Dict[str, Any]:
+    import json  # Import no início da função
+    
     try:
         print(f"🔍 Iniciando análise IA - Tamanho da imagem: {len(image_bytes)} bytes")
         
@@ -281,7 +283,6 @@ REGRAS IMPORTANTES:
         
         print(f"🧹 JSON limpo: {ai_result[:100]}...")
         
-        import json
         parsed_result = json.loads(ai_result)
         print("✅ JSON parseado com sucesso!")
         return parsed_result
