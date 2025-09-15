@@ -18,11 +18,13 @@ from pdf2image import convert_from_bytes
 
 # Tentar carregar variáveis de ambiente de arquivo .env
 try:
-    with open('.env', 'r') as f:
+    with open('.env', 'r', encoding='utf-8') as f:
         for line in f:
-            if line.strip() and not line.startswith('#'):
-                key, value = line.strip().split('=', 1)
-                os.environ[key] = value
+            line = line.strip()
+            if line and not line.startswith('#'):
+                if '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ[key.strip()] = value.strip()
     print("✅ Arquivo .env carregado")
 except FileNotFoundError:
     print("ℹ️ Arquivo .env não encontrado - usando variáveis de ambiente do sistema")
@@ -33,7 +35,11 @@ except Exception as e:
 print("🚀 Aplicação iniciada - Modo IA apenas")
 
 # Configure OpenAI
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-myTqtiPzxyxkmRmU0C6o-lW5ekaHrnChi2lvDBPKk6T3BlbkFJTeEtH5pt0ymMcpXlNQfjXkF6-Z-_l-omSWbQmjwPoA")
+
+# Debug: mostrar todas as variáveis de ambiente relacionadas
+print(f"🔍 DEBUG - OPENAI_API_KEY: {repr(OPENAI_API_KEY)}")
+print(f"🔍 DEBUG - Tamanho: {len(OPENAI_API_KEY) if OPENAI_API_KEY else 0}")
 
 # Verificar API Key
 if not OPENAI_API_KEY or len(OPENAI_API_KEY) < 20:
