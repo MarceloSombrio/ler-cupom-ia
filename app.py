@@ -21,6 +21,14 @@ print("🚀 Aplicação iniciada - Modo IA apenas")
 
 # Configure OpenAI
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-myTqtiPzxyxkmRmU0C6o-lW5ekaHrnChi2lvDBPKk6T3BlbkFJTeEtH5pt0ymMcpXlNQfjXkF6-Z-_l-omSWbQmjwPoA")
+
+# Verificar API Key
+if not OPENAI_API_KEY or len(OPENAI_API_KEY) < 20:
+    print("❌ AVISO: OpenAI API Key não configurada ou inválida!")
+    print("Configure a variável de ambiente OPENAI_API_KEY")
+else:
+    print(f"✅ OpenAI API Key configurada: {OPENAI_API_KEY[:10]}...")
+
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 app = Flask(__name__)
@@ -200,54 +208,81 @@ def _extract_delivery_fee(full_text: str) -> Optional[str]:
 
 def _ai_analyze_image(image_bytes: bytes) -> Dict[str, Any]:
     try:
+        print(f"🔍 Iniciando análise IA - Tamanho da imagem: {len(image_bytes)} bytes")
+        
+        # Verificar se a API key está configurada
+        if not OPENAI_API_KEY or OPENAI_API_KEY.startswith("sk-"):
+            print("❌ API Key não configurada corretamente")
+            return None
+            
         base64_string = base64.b64encode(image_bytes).decode('utf-8')
+        print(f"📤 Enviando imagem para OpenAI (base64: {len(base64_string)} chars)")
+        
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Analise cupons fiscais de delivery. Retorne JSON estruturado."},
+                {"role": "system", "content": "Você é um especialista em análise de cupons fiscais de delivery. Analise a imagem e extraia todas as informações visíveis em formato JSON estruturado."},
                 {"role": "user", "content": [
-                    {"type": "text", "text": """Extraia dados do cupom em JSON:
+                    {"type": "text", "text": """Analise esta imagem de cupom fiscal e extraia TODAS as informações visíveis em formato JSON:
 
 {
-  "marca": "IFOOD", "ZE_DELIVERY" ou "APLICATIVO_PROPRIO",
-  "nome_estabelecimento": "nome do restaurante",
+  "marca": "IFOOD", "ZE_DELIVERY", "UBER_EATS", "RAPPI" ou "APLICATIVO_PROPRIO",
+  "nome_estabelecimento": "nome do restaurante/estabelecimento",
   "numero_pedido": "número do pedido",
   "nome_cliente": "nome do cliente",
-  "telefone_cliente": "telefone",
-  "endereco_entrega": "endereço",
-  "data_criacao": "data/hora criação",
-  "data_entrega": "data/hora entrega",
+  "telefone_cliente": "telefone do cliente",
+  "endereco_entrega": "endereço de entrega completo",
+  "data_criacao": "data e hora de criação do pedido",
+  "data_entrega": "data e hora de entrega",
   "tipo_entrega": "Retirada em Loja" ou "Entrega",
-  "forma_pagamento": "PIX", "Cartão" ou outro,
-  "subtotal": "valor produtos",
-  "taxa_entrega": "taxa entrega",
-  "taxa_servico": "taxa serviço",
-  "total_geral": "total final",
-  "historico_cliente": "pedidos anteriores",
-  "observacoes": "observações"
+  "forma_pagamento": "PIX", "Cartão", "Dinheiro" ou outro,
+  "subtotal": "valor dos produtos",
+  "taxa_entrega": "taxa de entrega",
+  "taxa_servico": "taxa de serviço",
+  "total_geral": "valor total final",
+  "historico_cliente": "informações sobre pedidos anteriores",
+  "observacoes": "observações especiais"
 }
 
-MARCA: iFood/IFOOD→IFOOD, Zé Delivery→ZE_DELIVERY, Uber Eats→UBER_EATS, Rappi→RAPPI, outros→APLICATIVO_PROPRIO
-Valores: R$ X,XX. Datas: formato original. Se não visível: null. Apenas JSON."""},
+REGRAS IMPORTANTES:
+- MARCA: Identifique pelo logo/texto (iFood→IFOOD, Zé Delivery→ZE_DELIVERY, Uber Eats→UBER_EATS, Rappi→RAPPI, outros→APLICATIVO_PROPRIO)
+- VALORES: Use formato "R$ X,XX" 
+- DATAS: Mantenha formato original da imagem
+- Se alguma informação não estiver visível, use "null"
+- Retorne APENAS o JSON válido, sem explicações"""},
                     {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_string}"}}
                 ]}
             ],
-            max_tokens=1500,
-            temperature=0.0
+            max_tokens=2000,
+            temperature=0.1
         )
+        
         ai_result = response.choices[0].message.content.strip()
+        print(f"📥 Resposta recebida da IA: {len(ai_result)} caracteres")
         
         # Limpar possíveis caracteres extras antes do JSON
         if ai_result.startswith('```json'):
             ai_result = ai_result[7:]
         if ai_result.endswith('```'):
             ai_result = ai_result[:-3]
+        if ai_result.startswith('```'):
+            ai_result = ai_result[3:]
         ai_result = ai_result.strip()
         
+        print(f"🧹 JSON limpo: {ai_result[:100]}...")
+        
         import json
-        return json.loads(ai_result)
+        parsed_result = json.loads(ai_result)
+        print("✅ JSON parseado com sucesso!")
+        return parsed_result
+        
+    except json.JSONDecodeError as e:
+        print(f"❌ Erro ao fazer parse do JSON: {e}")
+        print(f"📄 Conteúdo recebido: {ai_result[:200]}...")
+        return None
     except Exception as e:
-        print(f"Erro na análise AI da imagem: {e}")
+        print(f"❌ Erro na análise AI da imagem: {e}")
+        print(f"🔍 Tipo do erro: {type(e).__name__}")
         return None
 
 
@@ -366,20 +401,27 @@ def extract_all(text: str, image_bytes: bytes = None) -> Dict[str, Any]:
 
     # Usar APENAS análise de imagem com IA se disponível
     if use_ai and image_bytes:
-        print("Analisando imagem diretamente com IA...")
+        print("🤖 Analisando imagem diretamente com IA...")
         ai_image_result = _ai_analyze_image(image_bytes)
         if ai_image_result:
-            print("Análise de imagem com IA bem-sucedida!")
-            # Retornar apenas o texto formatado
-            formatted_text = _format_cupom_data(ai_image_result)
-            return {
-                "texto_formatado": formatted_text,
-                "metodo": "IA_IMAGEM"
-            }
+            print("✅ Análise de imagem com IA bem-sucedida!")
+            try:
+                # Retornar apenas o texto formatado
+                formatted_text = _format_cupom_data(ai_image_result)
+                return {
+                    "texto_formatado": formatted_text,
+                    "metodo": "IA_IMAGEM"
+                }
+            except Exception as e:
+                print(f"❌ Erro ao formatar dados: {e}")
+                return {
+                    "texto_formatado": f"❌ Erro: Falha ao formatar dados extraídos: {str(e)}", 
+                    "metodo": "ERRO_FORMATACAO"
+                }
         else:
-            print("Erro na análise de imagem com IA")
+            print("❌ Falha na análise de imagem com IA")
             return {
-                "texto_formatado": "❌ Erro: Falha na análise da imagem com IA", 
+                "texto_formatado": "❌ Erro: Falha na análise da imagem com IA\n\nPossíveis causas:\n• API Key inválida\n• Imagem muito grande\n• Problema de conexão\n• Formato de imagem não suportado", 
                 "metodo": "ERRO_IA"
             }
 
