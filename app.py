@@ -38,8 +38,7 @@ else:
     print("AVISO: Tesseract não encontrado. Usando apenas IA para análise.")
 
 # Configure OpenAI
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "
-")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-myTqtiPzxyxkmRmU0C6o-lW5ekaHrnChi2lvDBPKk6T3BlbkFJTeEtH5pt0ymMcpXlNQfjXkF6-Z-_l-omSWbQmjwPoA")
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 app = Flask(__name__)
