@@ -314,6 +314,12 @@ REGRAS IMPORTANTES:
         print(f"❌ Erro na análise AI da imagem: {e}")
         print(f"🔍 Tipo do erro: {type(e).__name__}")
         print(f"🔍 Detalhes do erro: {str(e)}")
+        
+        # Verificar se é erro de API key
+        if "401" in str(e) or "invalid_api_key" in str(e) or "Incorrect API key" in str(e):
+            print("🔑 Erro de API Key detectado")
+            return {"error": "invalid_api_key"}
+        
         return None
 
 
@@ -435,20 +441,28 @@ def extract_all(text: str, image_bytes: bytes = None) -> Dict[str, Any]:
         print("🤖 Analisando imagem diretamente com IA...")
         ai_image_result = _ai_analyze_image(image_bytes)
         if ai_image_result:
-            print("✅ Análise de imagem com IA bem-sucedida!")
-            try:
-                # Retornar apenas o texto formatado
-                formatted_text = _format_cupom_data(ai_image_result)
+            # Verificar se é erro de API key
+            if isinstance(ai_image_result, dict) and ai_image_result.get("error") == "invalid_api_key":
+                print("🔑 Erro de API Key detectado")
                 return {
-                    "texto_formatado": formatted_text,
-                    "metodo": "IA_IMAGEM"
+                    "texto_formatado": "🔑 API Key Inválida\n\nPara usar a análise com IA, você precisa:\n\n1. Acessar: https://platform.openai.com/account/api-keys\n2. Criar uma nova API Key\n3. Configurar no Render ou localmente\n\n📱 A aplicação está funcionando perfeitamente!\nSó precisa de uma API Key válida da OpenAI.", 
+                    "metodo": "ERRO_API_KEY"
                 }
-            except Exception as e:
-                print(f"❌ Erro ao formatar dados: {e}")
-                return {
-                    "texto_formatado": f"❌ Erro: Falha ao formatar dados extraídos: {str(e)}", 
-                    "metodo": "ERRO_FORMATACAO"
-                }
+            else:
+                print("✅ Análise de imagem com IA bem-sucedida!")
+                try:
+                    # Retornar apenas o texto formatado
+                    formatted_text = _format_cupom_data(ai_image_result)
+                    return {
+                        "texto_formatado": formatted_text,
+                        "metodo": "IA_IMAGEM"
+                    }
+                except Exception as e:
+                    print(f"❌ Erro ao formatar dados: {e}")
+                    return {
+                        "texto_formatado": f"❌ Erro: Falha ao formatar dados extraídos: {str(e)}", 
+                        "metodo": "ERRO_FORMATACAO"
+                    }
         else:
             print("❌ Falha na análise de imagem com IA")
             return {
