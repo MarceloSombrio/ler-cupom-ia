@@ -5,6 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<title>Leitor de Cupom Fiscal</title>
 	<link rel="stylesheet" href="/static/css/styles.css" />
+	<!-- Render Deploy Trigger v3 - Final -->
 </head>
 <body>
 	<header class="container">
@@ -23,28 +24,37 @@
 	<main class="container">
 		<section class="card">
 			<form id="upload-form">
-				<label class="file-input">
-					<input type="file" id="file" name="file" accept="image/*,.pdf" capture="environment" />
+				<label class="file-input" id="file-input-label" hidden>
+					<input type="file" id="file" name="file" accept="image/*,.pdf" />
 				</label>
 				<div class="actions">
-					<button type="button" id="open-camera">Abrir Câmera</button>
-					<button type="submit">Extrair Dados</button>
-					<button type="button" id="debug-mode">Modo Debug</button>
-					<button type="button" id="ai-mode">🤖 AI ON</button>
+					<button type="button" id="import-file">📁 Importar Arquivo</button>
+					<button type="button" id="open-camera">📷 Abrir Câmera</button>
+					<button type="submit">✨ Extrair Dados</button>
+					<button type="button" id="debug-mode">🔧 Modo Debug</button>
 				</div>
 			</form>
 		</section>
 
-		<section class="card" id="camera-section" hidden>
-			<div class="video-wrapper">
-				<video id="video" autoplay playsinline></video>
+		<!-- Modal da Câmera -->
+		<div id="camera-modal" class="modal" hidden>
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3>📷 Capturar Cupom</h3>
+					<button id="close-camera-modal" class="close-btn">&times;</button>
+				</div>
+				<div class="modal-body">
+					<div class="video-wrapper">
+						<video id="video" autoplay playsinline></video>
+					</div>
+					<div class="actions">
+						<button id="capture">📸 Capturar</button>
+						<button id="close-camera">❌ Fechar</button>
+					</div>
+				</div>
 			</div>
-			<div class="actions">
-				<button id="capture">Capturar</button>
-				<button id="close-camera">Fechar Câmera</button>
-			</div>
-			<canvas id="canvas" hidden></canvas>
-		</section>
+		</div>
+		<canvas id="canvas" hidden></canvas>
 
 		<section class="card" id="result" hidden>
 			<h2>Resultado</h2>
