@@ -16,11 +16,24 @@ except Exception:
 
 from pdf2image import convert_from_bytes
 
+# Tentar carregar variáveis de ambiente de arquivo .env
+try:
+    with open('.env', 'r') as f:
+        for line in f:
+            if line.strip() and not line.startswith('#'):
+                key, value = line.strip().split('=', 1)
+                os.environ[key] = value
+    print("✅ Arquivo .env carregado")
+except FileNotFoundError:
+    print("ℹ️ Arquivo .env não encontrado - usando variáveis de ambiente do sistema")
+except Exception as e:
+    print(f"⚠️ Erro ao carregar .env: {e}")
+
 # Aplicação otimizada para usar apenas IA (sem Tesseract)
 print("🚀 Aplicação iniciada - Modo IA apenas")
 
 # Configure OpenAI
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-myTqtiPzxyxkmRmU0C6o-lW5ekaHrnChi2lvDBPKk6T3BlbkFJTeEtH5pt0ymMcpXlNQfjXkF6-Z-_l-omSWbQmjwPoA")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Verificar API Key
 if not OPENAI_API_KEY or len(OPENAI_API_KEY) < 20:
