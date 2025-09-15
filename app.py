@@ -211,12 +211,21 @@ def _ai_analyze_image(image_bytes: bytes) -> Dict[str, Any]:
         print(f"🔍 Iniciando análise IA - Tamanho da imagem: {len(image_bytes)} bytes")
         
         # Verificar se a API key está configurada
-        if not OPENAI_API_KEY or OPENAI_API_KEY.startswith("sk-"):
+        if not OPENAI_API_KEY or len(OPENAI_API_KEY) < 20:
             print("❌ API Key não configurada corretamente")
+            return None
+        
+        # Verificar tamanho da imagem (limite do OpenAI: 20MB)
+        if len(image_bytes) > 20 * 1024 * 1024:
+            print(f"❌ Imagem muito grande: {len(image_bytes)} bytes (limite: 20MB)")
             return None
             
         base64_string = base64.b64encode(image_bytes).decode('utf-8')
         print(f"📤 Enviando imagem para OpenAI (base64: {len(base64_string)} chars)")
+        
+        # Verificar se a string base64 não é muito grande
+        if len(base64_string) > 1000000:  # ~750KB de imagem
+            print(f"⚠️ Imagem grande, pode causar timeout")
         
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -254,7 +263,8 @@ REGRAS IMPORTANTES:
                 ]}
             ],
             max_tokens=2000,
-            temperature=0.1
+            temperature=0.1,
+            timeout=60  # Timeout de 60 segundos
         )
         
         ai_result = response.choices[0].message.content.strip()
@@ -283,6 +293,7 @@ REGRAS IMPORTANTES:
     except Exception as e:
         print(f"❌ Erro na análise AI da imagem: {e}")
         print(f"🔍 Tipo do erro: {type(e).__name__}")
+        print(f"🔍 Detalhes do erro: {str(e)}")
         return None
 
 
@@ -445,6 +456,33 @@ def extract_all(text: str, image_bytes: bytes = None) -> Dict[str, Any]:
 @app.get('/')
 def index():
     return render_template('index.html')
+
+
+@app.get('/test-api')
+def test_api():
+    """Endpoint para testar a API key"""
+    try:
+        # Teste simples com texto
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": "Responda apenas: OK"}],
+            max_tokens=10,
+            temperature=0.0
+        )
+        result = response.choices[0].message.content.strip()
+        return {
+            "status": "success",
+            "api_key_valid": True,
+            "response": result,
+            "api_key_preview": OPENAI_API_KEY[:10] + "..." if OPENAI_API_KEY else "NOT_SET"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "api_key_valid": False,
+            "error": str(e),
+            "api_key_preview": OPENAI_API_KEY[:10] + "..." if OPENAI_API_KEY else "NOT_SET"
+        }
 
 
 @app.post('/extract')
