@@ -7,7 +7,6 @@ from typing import Dict, Any, List, Optional, Tuple
 from flask import Flask, render_template, request, jsonify
 from PIL import Image
 import numpy as np
-import pytesseract
 from openai import OpenAI
 
 try:
@@ -17,25 +16,8 @@ except Exception:
 
 from pdf2image import convert_from_bytes
 
-# Configure tesseract path for Windows (only for local development)
-TESSERACT_CMD = os.getenv("TESSERACT_CMD")
-if not TESSERACT_CMD:
-    # Try common Windows installation paths
-    possible_paths = [
-        r"C:\Users\marcelo.sombrio\AppData\Local\Programs\Tesseract-OCR\tesseract.exe",
-        r"C:\Program Files\Tesseract-OCR\tesseract.exe",
-        r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
-    ]
-    for path in possible_paths:
-        if os.path.exists(path):
-            TESSERACT_CMD = path
-            break
-
-if TESSERACT_CMD:
-    pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
-    print(f"Tesseract configurado: {TESSERACT_CMD}")
-else:
-    print("AVISO: Tesseract não encontrado. Usando apenas IA para análise.")
+# Aplicação otimizada para usar apenas IA (sem Tesseract)
+print("🚀 Aplicação iniciada - Modo IA apenas")
 
 # Configure OpenAI
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "sk-myTqtiPzxyxkmRmU0C6o-lW5ekaHrnChi2lvDBPKk6T3BlbkFJTeEtH5pt0ymMcpXlNQfjXkF6-Z-_l-omSWbQmjwPoA")
@@ -140,26 +122,7 @@ def _preprocess_image_for_ai(pil_image: Image.Image) -> Image.Image:
 # OCR and Extraction
 # ------------------------
 
-def _ocr_image(pil_image: Image.Image) -> str:
-    config = "--oem 3 --psm 6"
-    try:
-        # Try Portuguese first
-        text = pytesseract.image_to_string(pil_image, lang='por', config=config)
-        if not text.strip():
-            raise Exception("Portuguese OCR returned empty")
-    except Exception:
-        # Fallback to English if Portuguese fails
-        try:
-            text = pytesseract.image_to_string(pil_image, lang='eng', config=config)
-        except Exception:
-            # Last resort: no language specified
-            try:
-                text = pytesseract.image_to_string(pil_image, config=config)
-            except Exception:
-                # If Tesseract is not available, return empty string
-                print("Tesseract não disponível. Usando apenas IA.")
-                return ""
-    return text
+# Função OCR removida - usando apenas IA
 
 
 def _detect_brand(full_text: str) -> str:
@@ -459,13 +422,8 @@ def extract_route():
             processed_img.save(img_buffer, format='PNG', quality=95)
             first_image_bytes = img_buffer.getvalue()
         
-        # OCR apenas como fallback (não usado pela IA)
-        overall_text_parts: List[str] = []
-        for img in images:
-            pre = _preprocess_image_for_ocr(img)
-            ocr_text = _ocr_image(pre)
-            overall_text_parts.append(ocr_text)
-        full_text = "\n".join(overall_text_parts)
+        # Não precisamos mais de OCR - usando apenas IA
+        full_text = ""
 
         data = extract_all(full_text, first_image_bytes)
         return data.get("texto_formatado", "❌ Erro: Não foi possível processar a imagem.")
