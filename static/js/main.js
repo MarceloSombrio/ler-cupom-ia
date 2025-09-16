@@ -9,10 +9,17 @@ const openCameraBtn = document.getElementById('open-camera');
 const closeCameraBtn = document.getElementById('close-camera');
 const closeCameraModalBtn = document.getElementById('close-camera-modal');
 const captureBtn = document.getElementById('capture');
+const retakeBtn = document.getElementById('retake');
+const confirmPhotoBtn = document.getElementById('confirm-photo');
 const debugBtn = document.getElementById('debug-mode');
 const cameraModal = document.getElementById('camera-modal');
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
+const videoContainer = document.getElementById('video-container');
+const previewContainer = document.getElementById('preview-container');
+const previewImage = document.getElementById('preview-image');
+const cameraActions = document.getElementById('camera-actions');
+const previewActions = document.getElementById('preview-actions');
 
 let mediaStream = null;
 let capturedImageBase64 = null;
@@ -175,9 +182,18 @@ function closeCameraModal() {
 	cameraModal.hidden = true;
 	cameraModal.style.display = 'none';
 	
-	// Resetar botão da câmera
-	openCameraBtn.textContent = '📷 Abrir Câmera';
-	openCameraBtn.style.background = '#3b82f6';
+	// Resetar interface do modal
+	videoContainer.hidden = false;
+	previewContainer.hidden = true;
+	cameraActions.hidden = false;
+	previewActions.hidden = true;
+	capturedImageBase64 = null;
+	
+	// Resetar botão da câmera apenas se não há foto confirmada
+	if (openCameraBtn.textContent !== '📷 Foto Importada!') {
+		openCameraBtn.textContent = '📷 Abrir Câmera';
+		openCameraBtn.style.background = '#3b82f6';
+	}
 }
 
 closeCameraBtn.addEventListener('click', closeCameraModal);
@@ -202,14 +218,38 @@ captureBtn.addEventListener('click', () => {
 	ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 	capturedImageBase64 = canvas.toDataURL('image/jpeg', 0.92);
 	
-	// Fechar modal após captura
+	// Mostrar preview da foto
+	previewImage.src = capturedImageBase64;
+	videoContainer.hidden = true;
+	previewContainer.hidden = false;
+	cameraActions.hidden = true;
+	previewActions.hidden = false;
+});
+
+// Tirar novamente - volta para a câmera
+retakeBtn.addEventListener('click', () => {
+	videoContainer.hidden = false;
+	previewContainer.hidden = true;
+	cameraActions.hidden = false;
+	previewActions.hidden = true;
+	capturedImageBase64 = null;
+});
+
+// Confirmar foto - fecha modal e marca como importada
+confirmPhotoBtn.addEventListener('click', () => {
+	// Fechar modal
 	closeCameraModal();
 	
-	// Mostrar feedback visual
-	openCameraBtn.textContent = '📷 Imagem Capturada!';
+	// Mostrar feedback visual - foto importada
+	openCameraBtn.textContent = '📷 Foto Importada!';
 	openCameraBtn.style.background = '#22c55e';
 	
-	alert('📸 Imagem capturada! Agora clique em "✨ Extrair Dados" para processar.');
+	// Limpar seleção de arquivo
+	fileInput.value = '';
+	importFileBtn.textContent = '📁 Importar Arquivo';
+	importFileBtn.style.background = '#3b82f6';
+	
+	alert('📸 Foto confirmada! Agora clique em "✨ Extrair Dados" para processar.');
 });
 
 debugBtn.addEventListener('click', () => {
