@@ -5,7 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<title>Leitor de Cupom Fiscal</title>
 	<link rel="stylesheet" href="/static/css/styles.css" />
-	<!-- Render Deploy Trigger v3 - Final -->
+	<!-- Render Deploy Trigger v4 - Botões Preview -->
 </head>
 <body>
 	<header class="container">
@@ -44,19 +44,12 @@
 					<button id="close-camera-modal" class="close-btn">&times;</button>
 				</div>
 				<div class="modal-body">
-					<div class="video-wrapper" id="video-container">
+					<div class="video-wrapper">
 						<video id="video" autoplay playsinline></video>
 					</div>
-					<div class="preview-wrapper" id="preview-container" hidden>
-						<img id="preview-image" alt="Preview da foto capturada">
-					</div>
-					<div class="actions" id="camera-actions">
+					<div class="actions">
 						<button id="capture">📸 Capturar</button>
 						<button id="close-camera">❌ Fechar</button>
-					</div>
-					<div class="actions" id="preview-actions" hidden>
-						<button id="retake">🔄 Tirar Novamente</button>
-						<button id="confirm-photo">✅ Confirmar Foto</button>
 					</div>
 				</div>
 			</div>
