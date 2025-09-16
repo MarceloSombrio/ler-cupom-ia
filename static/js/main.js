@@ -142,18 +142,26 @@ fileInput.addEventListener('change', (e) => {
 // Abrir modal da câmera
 openCameraBtn.addEventListener('click', async () => {
 	try {
+		// Mostrar modal primeiro
+		cameraModal.hidden = false;
+		cameraModal.style.display = 'flex';
+		
+		// Solicitar acesso à câmera
 		mediaStream = await navigator.mediaDevices.getUserMedia({ 
 			video: { facingMode: 'environment' }, 
 			audio: false 
 		});
 		video.srcObject = mediaStream;
-		cameraModal.hidden = false;
 		capturedImageBase64 = null;
+		
 		// Limpar seleção de arquivo
 		fileInput.value = '';
 		importFileBtn.textContent = '📁 Importar Arquivo';
 		importFileBtn.style.background = '#3b82f6';
 	} catch (err) {
+		// Se falhar, fechar modal
+		cameraModal.hidden = true;
+		cameraModal.style.display = 'none';
 		alert('Não foi possível acessar a câmera: ' + String(err));
 	}
 });
@@ -165,6 +173,11 @@ function closeCameraModal() {
 		mediaStream = null;
 	}
 	cameraModal.hidden = true;
+	cameraModal.style.display = 'none';
+	
+	// Resetar botão da câmera
+	openCameraBtn.textContent = '📷 Abrir Câmera';
+	openCameraBtn.style.background = '#3b82f6';
 }
 
 closeCameraBtn.addEventListener('click', closeCameraModal);
