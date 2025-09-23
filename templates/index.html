@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Leitor de Cupom Fiscal</title>
+	<link rel="stylesheet" href="/static/css/styles.css" />
+	<!-- Render Deploy Trigger v4 - Botões Preview -->
+</head>
+<body>
+	<header class="container">
+		<h1>Leitor de Cupom Fiscal</h1>
+		<p>Envie uma imagem/PDF ou use a câmera para capturar o cupom.</p>
+		<div class="tips">
+			<h3>📸 Dicas para melhor captura:</h3>
+			<ul>
+				<li>✅ Boa iluminação (evite sombras)</li>
+				<li>✅ Cupom bem focado e reto</li>
+				<li>✅ Texto legível e nítido</li>
+				<li>✅ Evite reflexos e brilhos</li>
+			</ul>
+		</div>
+	</header>
+	<main class="container">
+		<section class="card">
+			<form id="upload-form">
+				<label class="file-input" id="file-input-label" hidden>
+					<input type="file" id="file" name="file" accept="image/*,.pdf" />
+				</label>
+				<div class="actions">
+					<button type="button" id="import-file">📁 Importar Arquivo</button>
+					<button type="button" id="open-camera">📷 Abrir Câmera</button>
+					<button type="submit">✨ Extrair Dados</button>
+					<button type="button" id="debug-mode">🔧 Modo Debug</button>
+				</div>
+			</form>
+		</section>
+
+		<!-- Modal da Câmera -->
+		<div id="camera-modal" class="modal" hidden>
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3>📷 Capturar Cupom</h3>
+					<button id="close-camera-modal" class="close-btn">&times;</button>
+				</div>
+				<div class="modal-body">
+					<div class="video-wrapper">
+						<video id="video" autoplay playsinline></video>
+					</div>
+					<div class="actions">
+						<button id="capture">📸 Capturar</button>
+						<button id="close-camera">❌ Fechar</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<canvas id="canvas" hidden></canvas>
+
+		<section class="card" id="result" hidden>
+			<h2>Resultado</h2>
+			<div id="result-content">
+				<pre id="result-json"></pre>
+			</div>
+		</section>
+	</main>
+	<script src="/static/js/main.js"></script>
+</body>
+</html>
